@@ -1,0 +1,17 @@
+[project]
+name = "lwv-finance"
+version = "1.0.0"
+description = "Campaign Finance analyses for CA ballot measures"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "jinja2>=3.1.6",
+    "marimo>=0.23.16",
+    "matplotlib>=3.11.1",
+    "pandas>=3.0.5",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.2",
+]
