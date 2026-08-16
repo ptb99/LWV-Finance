@@ -1,13 +1,13 @@
 import marimo
 
-__generated_with = "0.23.16"
-app = marimo.App()
+__generated_with = "0.23.15"
+app = marimo.App(auto_download=["html"])
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Calculation
+    ## Calculation
     """)
     return
 
@@ -71,23 +71,10 @@ def _(urllib):
     return election, headers, make_url
 
 
-@app.cell(disabled=True, hide_code=True)
-def _(urllib):
-    _urlstr = 'https://powersearch.sos.ca.gov/download_csv.php?w=WHERE+contributions_search.BallotMeasureContribution+%3D+%27Y%27+AND+%28contributions_search.ElectionCycle+%3D+%3F%29&d=a%3A1%3A%7Bi%3A0%3Bs%3A4%3A%222025%22%3B%7D&c=a%3A6%3A%7Bs%3A16%3A%2200Contributor%28s%29%22%3Bs%3A3%3A%22All%22%3Bs%3A19%3A%2201Contributor_State%22%3Bs%3A3%3A%22All%22%3Bs%3A14%3A%2202Recipient%28s%29%%3B22s%3A19%3A%22All+ballot+measures%22%3Bs%3A31%3A%2207Contribution_Dates_and_Cycles%22%3Bs%3A0%3A%22%22%3Bs%3A27%3A%2206Exclude_Allied_Committees%22%3Bs%3A2%3A%22No%22%3Bs%3A21%3A%2209Contribution_Cycles%22%3Bs%3A4%3A%222025%22%3B%7D'
-    #url = 'https://powersearch.sos.ca.gov/download_csv.php?w=WHERE+contributions_search.AlliedCommittee+%3D+%27N%27+AND+contributions_search.BallotMeasureContribution+%3D+%27Y%27+AND+%28contributions_search.ElectionCycle+%3D+%3F%29&d=a%3A1%3A%7Bi%3A0%3Bs%3A4%3A%222025%22%3B%7D&c=a%3A6%3A%7Bs%3A16%3A%2200Contributor%28s%29%22%3Bs%3A3%3A%22All%22%3Bs%3A19%3A%2201Contributor_State%22%3Bs%3A3%3A%22All%22%3Bs%3A14%3A%2202Recipient%28s%29%22%3Bs%3A19%3A%22All+ballot+measures%22%3Bs%3A31%3A%2207Contribution_Dates_and_Cycles%22%3Bs%3A0%3A%22%22%3Bs%3A27%3A%2206Exclude_Allied_Committees%22%3Bs%3A3%3A%22Yes%22%3Bs%3A21%3A%2209Contribution_Cycles%22%3Bs%3A4%3A%222025%22%3B%7D'
-    #urlstr = 'https://powersearch.sos.ca.gov/download_csv.php?w=WHERE+smry_propositions.Target+%3D+%3F+AND+smry_propositions.Election+%3D+%3F+AND+contributions_search.BallotMeasureContribution+%3D+%27Y%27&d=a%3A2%3A%7Bi%3A0%3Bs%3A141%3A%22PROPOSITION+039+-+ESTABLISHES+ADDITIONAL+VOTER+IDENTIFICATION+AND+CITIZENSHIP+VERIFICATION+REQUIREMENTS.+INITIATIVE+CONSTITUTIONAL+AMENDMENT.%22%3Bi%3A1%3Bs%3A10%3A%222026-11-03%22%3B%7D&c=a%3A6%3A%7Bs%3A16%3A%2200Contributor%28s%29%22%3Bs%3A3%3A%22All%22%3Bs%3A19%3A%2201Contributor_State%22%3Bs%3A3%3A%22All%22%3Bs%3A14%3A%2202Recipient%28s%29%22%3Bs%3A157%3A%22Ballot+measure%3A+PROPOSITION+039+-+ESTABLISHES+ADDITIONAL+VOTER+IDENTIFICATION+AND+CITIZENSHIP+VERIFICATION+REQUIREMENTS.+INITIATIVE+CONSTITUTIONAL+AMENDMENT.%22%3Bs%3A31%3A%2207Contribution_Dates_and_Cycles%22%3Bs%3A3%3A%22All%22%3Bs%3A27%3A%2206Exclude_Allied_Committees%22%3Bs%3A2%3A%22No%22%3Bs%3A10%3A%2205Election%22%3Bs%3A10%3A%222026-11-03%22%3B%7D'
-    _p = urllib.parse.urlparse(_urlstr)
-    ## It's not very clear how to make sense of these query params.  I guess it makes sense to the PowerSearch back-end.
-    ## Potentially, one could tweak one of the params and call urllib.parse.quote_plus().
-    ## Note that the scheme is 's:3:"All";' means a string of len 3 with value "All" and 'a:6:{...}' is an array of 6 elements.
-    urllib.parse.parse_qs(_p.query)
-    return
-
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Retreive Data
+    ## Retreive Data
     """)
     return
 
@@ -96,7 +83,7 @@ def _(mo):
 def _(mo):
     PROPS_LIST = [1, 2, 3, 4, 5, 37, 38, 39, 40, 41, 42 , 43, 44, 45]
     dropdown = mo.ui.dropdown(
-        options=PROPS_LIST, value=39, label="choose Prop"
+        options=PROPS_LIST, value=39, label="##Choose Prop"
     )
     dropdown
     return (dropdown,)
@@ -126,6 +113,9 @@ def _(dropdown, election, headers, make_url, pd):
     # Adjust to make IDs have integer values:
     rawdata[['Recipient Committee ID', 'Contributor ID']] = rawdata[['Recipient Committee ID', 'Contributor ID']].astype(pd.Int64Dtype())
 
+    # shorten column name:
+    rawdata.rename(columns={'Recipient Committee ID': 'Recipient ID'}, inplace=True)
+
     #rawdata.head() 
     rawdata.info()
     #rawdata.to_csv('powersearch-test-Oct30.csv')
@@ -135,20 +125,17 @@ def _(dropdown, election, headers, make_url, pd):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Basic Stats
+    ## Basic Stats
     """)
     return
 
 
-app._unparsable_cell(
-    r"""
+@app.cell
+def _(mo, rawdata):
     print('Num Entries by Committee')
-    _x = rawdata.groupby(['Ballot Measure(s)','Recipient Committee ID','Recipient Committee'])['Election'].count()
-    _x.rename('Count'))
-
-    """,
-    name="_"
-)
+    _x = rawdata.groupby(['Ballot Measure(s)','Recipient ID','Recipient Committee'])['Election'].count()
+    mo.plain(_x.rename('Count'))
+    return
 
 
 @app.cell
@@ -157,7 +144,7 @@ def _(rawdata, re):
     pro_regex = re.compile(r'^SUPPORT', re.IGNORECASE)
     con_regex = re.compile(r'^OPPOSE', re.IGNORECASE)
 
-    fields = ['Amount', 'Recipient Committee', 'Recipient Committee ID', 'Contributor Name', 'Contributor ID', 
+    fields = ['Amount', 'Recipient Committee', 'Recipient ID', 'Contributor Name', 'Contributor ID', 
               'Contributor City', 'Contributor State', 'Contributor Zip Code']
 
     s = rawdata['Ballot Measure(s)']
@@ -171,7 +158,7 @@ def _(rawdata, re):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Results
+    ## Results
     """)
     return
 
@@ -193,22 +180,44 @@ def _(cons, pd, pros):
                  'props': 'border: 1px solid black; '
                           'padding: 5px 20px; text-align: right; font-size: 1.5em;'}
 
-    totals.style.format(precision=2, thousands=',').format(lambda x: f'{int(x):,}',       subset=('Num Donations', totals.columns)).set_table_styles([header_css, table_css])
-
+    totals.style.format(precision=3, thousands=',').format(lambda x: f'{int(x):,}',       subset=('Num Donations', totals.columns)).set_table_styles([header_css, table_css])
     return
 
 
 @app.cell
-def _(pros):
+def _():
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Top PRO contributors
+    """)
+    return
+
+
+@app.cell
+def _(mo, pros):
     print('Top PRO contributors')
-    pros.groupby(['Contributor Name', 'Recipient Committee ID'])['Amount'].sum().nlargest(15)/1e6
+    _df = pros.groupby(['Contributor Name', 'Recipient ID'])['Amount'].sum().nlargest(15)/1e6
+    mo.plain(_df.head(10))
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Top CON contributors
+    """)
     return
 
 
 @app.cell
-def _(cons):
+def _(cons, mo):
     print('Top CON contributors')
-    cons.groupby(['Contributor Name', 'Recipient Committee ID'])['Amount'].sum().nlargest(10)/1e6
+    _df = cons.groupby(['Contributor Name', 'Recipient ID'])['Amount'].sum().nlargest(10)/1e6
+    mo.plain(_df.head(10))
     return
 
 
@@ -223,49 +232,54 @@ def _(cons, pd, pros):
         else:
             return 'Out-State'
 
-    def _make_stats(df):
+    def _make_stats(df, tag):
         total = df['Amount'].sum()
         stats = pd.DataFrame(
             df.groupby(df['Contributor State'].apply(_in_state))['Amount'].sum() )
-        stats['Percentage'] = stats['Amount'] / total * 100
+        stats[f'{tag} Percentage'] = stats['Amount'] / total * 100
         stats['Amount'] /= 1e6
-        return stats.rename(columns={'Amount': 'Amount ($M)'})
+        return stats.rename(columns={'Amount': f'{tag} Amount ($M)'})
 
     _header_css = {'selector': 'th',
                   'props': 'padding: 10px;'}
     _table_css = {'selector': 'td',
                  'props': 'border: 1px solid black; '
-                          'padding: 2px 20px; text-align: right; font-size: 1em;'}
+                          'padding: 2px 10px; text-align: right; font-size: 1em;'}
 
-    print('PRO:')
-    #_make_stats(pros).style.format(precision=3).set_table_styles([_header_css, _table_css])
-    print(_make_stats(pros).to_string(float_format=lambda x: f'{x:.3f}'))
+    _table = _make_stats(pros, 'PRO').join(_make_stats(cons, 'CON'), how='outer')
+    _table.style.format(precision=6).set_table_styles([_header_css, _table_css])
+    return
 
-    print()
-    print('CON:')
-    print(_make_stats(cons).to_string(float_format=lambda x: f'{x:.3f}'))
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ____
+
+    ### [S = $0-500, M = $500-50k, L = $50k+]
+    """)
     return
 
 
 @app.cell
-def _(cons, pd, pros):
+def _(cons, mo, pd, pros):
     # Have to remove 'Unitemized' since they're usually small donors
-    p = pros[pros['Contributor Name'] != 'Unitemized Contributions'].groupby(['Contributor Name', 'Recipient Committee ID'])['Amount'].sum()
-    c = cons[cons['Contributor Name'] != 'Unitemized Contributions'].groupby(['Contributor Name', 'Recipient Committee ID'])['Amount'].sum()
+    p = pros[pros['Contributor Name'] != 'Unitemized Contributions'].groupby(['Contributor Name', 'Recipient ID'])['Amount'].sum()
+    c = cons[cons['Contributor Name'] != 'Unitemized Contributions'].groupby(['Contributor Name', 'Recipient ID'])['Amount'].sum()
 
     # S = 0-100, M = 101-999, L = 1000+
     #bins = [0, 100, 999.99, 1000000000000.0]
 
-    print('S = 0-500, M = 500-50k, L = 50k+')
+    # S = 0-500, M = 500-50k, L = 50k+
     bins = [0, 500, 50000, 1000000000000.0]
 
     names = ['S', 'M', 'L']
     p_labels = pd.cut(p, bins, labels=names)
     c_labels = pd.cut(c, bins, labels=names)
     _totals = pd.DataFrame(
-        {'PRO Num Donors': p.groupby(p_labels, observed=False).count(),
+        {'PRO Donors': p.groupby(p_labels, observed=False).count(),
          'PRO Total ($M)': p.groupby(p_labels, observed=False).sum()/1e6, 
-         'CON Num Donors': c.groupby(c_labels, observed=False).count(),
+         'CON Donors': c.groupby(c_labels, observed=False).count(),
          'CON Total ($M)': c.groupby(c_labels, observed=False).sum()/1e6})
 
     # add back in the Unitemized (<$100) totals:
@@ -274,7 +288,7 @@ def _(cons, pd, pros):
     _totals.at['S', 'PRO Total ($M)'] += _p_unitemized / 1e6
     _totals.at['S', 'CON Total ($M)'] += _c_unitemized / 1e6
 
-    _totals.sort_index(ascending=False).fillna(0)
+    mo.plain(_totals.sort_index(ascending=False).fillna(0))
     return
 
 
@@ -287,67 +301,67 @@ def _(mo):
 
 
 @app.cell
-def _(pros):
+def _():
     # All unitemized contribs PRO (i.e. < $100)
-    pros[pros['Contributor Name'] == 'Unitemized Contributions'].nlargest(20, 'Amount')
+    #pros[pros['Contributor Name'] == 'Unitemized Contributions'].nlargest(20, 'Amount')
     return
 
 
 @app.cell
-def _(cons):
+def _():
     # All unitemized contribs CON (i.e. < $100)
-    cons[cons['Contributor Name'] == 'Unitemized Contributions'].nlargest(10, 'Amount')
+    #cons[cons['Contributor Name'] == 'Unitemized Contributions'].nlargest(10, 'Amount')
     return
 
 
 @app.cell
-def _(pros):
+def _():
     # All recipient committees PRO
-    pros.groupby('Recipient Committee ID')['Amount'].nunique().sort_values(ascending=False)
+    #pros.groupby('Recipient Committee ID')['Amount'].nunique().sort_values(ascending=False)
     return
 
 
 @app.cell
-def _(cons):
+def _():
     # All recipient committees CON
-    cons.groupby('Recipient Committee ID')['Amount'].nunique().sort_values(ascending=False)
+    #cons.groupby('Recipient Committee ID')['Amount'].nunique().sort_values(ascending=False)
     return
 
 
 @app.cell
-def _(pros):
+def _():
     ## Find cases of committees giving to other committees
-    _temp = pros[(pros['Recipient Committee ID'] > 0) & (pros['Contributor ID'] > 0)]
-    print(f"PRO donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
-    _temp.nlargest(10, 'Amount')
+    #_temp = pros[(pros['Recipient ID'] > 0) & (pros['Contributor ID'] > 0)]
+    #print(f"PRO donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
+    #_temp.nlargest(10, 'Amount')
     return
 
 
 @app.cell
-def _(cons):
+def _():
     ## Find cases of committees giving to other committees
-    _temp = cons[(cons['Recipient Committee ID'] > 0) & (cons['Contributor ID'] > 0)]
-    print(f"CON donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
-    _temp.nlargest(10, 'Amount')
+    #_temp = cons[(cons['Recipient ID'] > 0) & (cons['Contributor ID'] > 0)]
+    #print(f"CON donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
+    #_temp.nlargest(10, 'Amount')
     return
 
 
 @app.cell
-def _(cons):
-    _id =  1485228
-    cons[cons['Recipient Committee ID'] == _id].sort_values('Amount', ascending=False)
+def _():
+    #_id =  1485228
+    #cons[cons['Recipient ID'] == _id].sort_values('Amount', ascending=False)
     return
 
 
 @app.cell
-def _(rawdata):
-    rawdata[ (rawdata['Recipient Committee ID'] == 1484470) & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
+def _():
+    #rawdata[ (rawdata['Recipient ID'] == 1484470) & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
     return
 
 
 @app.cell
-def _(rawdata):
-    rawdata[ (rawdata['Recipient Committee ID'] == 1489007) & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
+def _():
+    #rawdata[ (rawdata['Recipient ID'] == 1489007) & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
     return
 
 
