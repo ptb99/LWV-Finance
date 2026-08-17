@@ -83,13 +83,13 @@ def _(mo):
 def _(mo):
     PROPS_LIST = [1, 2, 3, 4, 5, 37, 38, 39, 40, 41, 42 , 43, 44, 45]
     dropdown = mo.ui.dropdown(
-        options=PROPS_LIST, value=39, label="##Choose Prop"
+        options=PROPS_LIST, value=39, label="##Choose Prop: "
     )
     dropdown
     return (dropdown,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(dropdown, election, headers, make_url, pd):
     ## Data Retrieval
     USE_CACHE = False
@@ -181,11 +181,13 @@ def _(cons, pd, pros):
                           'padding: 5px 20px; text-align: right; font-size: 1.5em;'}
 
     totals.style.format(precision=3, thousands=',').format(lambda x: f'{int(x):,}',       subset=('Num Donations', totals.columns)).set_table_styles([header_css, table_css])
-    return
 
-
-@app.cell
-def _():
+    #mo.ui.dataframe(totals,
+    #    format_mapping={
+    #        "age": "{:d} years".format,
+    #        "height_cm": format_height,
+    #    },
+    #)
     return
 
 
@@ -257,6 +259,7 @@ def _(mo):
     ____
 
     ### [S = $0-500, M = $500-50k, L = $50k+]
+    (Note: contributions < $100 do not need to be itemized and can be reported through a single entry labeled "Unitemized Contributions".  Hence, the number of "S" donors will not be accurate here, even though the "S" total dollars is accurate and includes those Unitemized Contributions.)
     """)
     return
 
@@ -295,7 +298,7 @@ def _(cons, mo, pd, pros):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Diagnostics
+    ## Diagnostics
     """)
     return
 
@@ -339,17 +342,49 @@ def _():
 
 @app.cell
 def _():
-    ## Find cases of committees giving to other committees
-    #_temp = cons[(cons['Recipient ID'] > 0) & (cons['Contributor ID'] > 0)]
-    #print(f"CON donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
-    #_temp.nlargest(10, 'Amount')
+    #_comms = pros.groupby('Contributor ID')['Amount'].sum()
+    #_comms
     return
 
 
 @app.cell
 def _():
-    #_id =  1485228
-    #cons[cons['Recipient ID'] == _id].sort_values('Amount', ascending=False)
+    #_id = 1486767
+    _id = 1353866
+    #_id = 761010
+    #_id = 1488414
+    #pros[pros['Recipient ID'] == _id].sort_values('Amount', ascending=False)
+    return
+
+
+@app.cell
+def _():
+    #_id = 1488414
+    #rawdata[ rawdata['Contributor ID'] == _id ]
+    #rawdata[ rawdata['Recipient ID'] == _id ]
+    return
+
+
+@app.cell
+def _(pd):
+    def get_donors(df, id):
+        return df[ df['Recipient ID'] == id ]
+
+    def merge_donors(df):
+        _comms = df.groupby('Contributor ID')['Amount'].sum()
+        result = pd.concat( [get_donors(df, id) for id in _comms.index] )
+        return result
+
+    #merge_donors(pros)
+    return
+
+
+@app.cell
+def _():
+    ## Find cases of committees giving to other committees
+    #_temp = cons[(cons['Recipient ID'] > 0) & (cons['Contributor ID'] > 0)]
+    #print(f"CON donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
+    #_temp.nlargest(10, 'Amount')
     return
 
 
