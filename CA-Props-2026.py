@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.15"
+__generated_with = "0.23.16"
 app = marimo.App(auto_download=["html"])
 
 
@@ -167,10 +167,13 @@ def _(mo):
 def _(cons, pd, pros):
     import jinja2
 
-    rows = ['Total ($M)', 'Num Donations', 'Avg Donation ($)', 'Median Donation ($)']
+    _p = pros.groupby(['Recipient ID', 'Contributor Name'])['Amount'].sum()
+    _c = cons.groupby(['Recipient ID', 'Contributor Name'])['Amount'].sum()
+
+    rows = ['Total ($M)', 'Num Donors', 'Avg Donation ($)', 'Median Donation ($)']
     funs = [pd.Series.sum, pd.Series.count, pd.Series.mean, pd.Series.median]
-    totals = pd.DataFrame({'PRO': [x(pros['Amount']) for x in funs], 
-                            'CON': [x(cons['Amount']) for x in funs]}, index=rows)
+    totals = pd.DataFrame({ 'PRO': [x(_p) for x in funs],
+                            'CON': [x(_c) for x in funs]}, index=rows)
 
     totals.loc['Total ($M)'] /= 1000000.0
 
@@ -180,8 +183,17 @@ def _(cons, pd, pros):
                  'props': 'border: 1px solid black; '
                           'padding: 5px 20px; text-align: right; font-size: 1.5em;'}
 
-    totals.style.format(precision=3, thousands=',').format(lambda x: f'{int(x):,}',       subset=('Num Donations', totals.columns)).set_table_styles([header_css, table_css])
+    totals.style.format(
+        precision=0, thousands=','
+    ).format(
+        lambda x: f'{int(x):,}',
+        subset=('Num Donors', totals.columns)
+    ).format(
+        precision=6,
+        subset=('Total ($M)', totals.columns)
+    ).set_table_styles([header_css, table_css])
 
+    ## Alternate idea:
     #mo.ui.dataframe(totals,
     #    format_mapping={
     #        "age": "{:d} years".format,
