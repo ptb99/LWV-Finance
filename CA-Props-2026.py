@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.16"
+__generated_with = "0.24.0"
 app = marimo.App(auto_download=["html"])
 
 
@@ -56,6 +56,7 @@ def _(urllib):
         query = """
     WHERE smry_propositions.Target LIKE ?
       AND smry_propositions.Election = ?
+      AND contributions_search.AlliedCommittee = 'N'
       AND contributions_search.BallotMeasureContribution = 'Y'
     """
         arg_list = [
@@ -89,29 +90,32 @@ def _(mo):
     return (dropdown,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(dropdown, election, headers, make_url, pd):
     ## Data Retrieval
     USE_CACHE = False
     #prop_num = 39
     prop_num = dropdown.value
 
+    ## Ensure that IDs are read/formatted as strings
+    force_types = {
+        "Recipient Committee ID": "str",
+        "Contributor ID": "str",
+    }
+
     if USE_CACHE:
         # Use a cached copy to speed up testing:
         url = 'powersearch-prop39-2026-08-09.csv'
-        rawdata = pd.read_csv(url, skipfooter=9, engine='python')
+        rawdata = pd.read_csv(url, skipfooter=9, engine='python', dtype=force_types)
     else:
         url = make_url(prop_num, election)
-        rawdata = pd.read_csv(url, storage_options=headers)
+        rawdata = pd.read_csv(url, storage_options=headers, dtype=force_types)
 
     #rawdata = pd.read_csv(url, header=0)
     #rawdata = pd.read_csv(url, index_col=0)
 
     # drop any raw that is missing Cycle == 2025
     rawdata = rawdata.dropna(subset=['Cycle'])
-
-    # Adjust to make IDs have integer values:
-    rawdata[['Recipient Committee ID', 'Contributor ID']] = rawdata[['Recipient Committee ID', 'Contributor ID']].astype(pd.Int64Dtype())
 
     # shorten column name:
     rawdata.rename(columns={'Recipient Committee ID': 'Recipient ID'}, inplace=True)
@@ -144,7 +148,8 @@ def _(rawdata, re):
     pro_regex = re.compile(r'^SUPPORT', re.IGNORECASE)
     con_regex = re.compile(r'^OPPOSE', re.IGNORECASE)
 
-    fields = ['Amount', 'Recipient Committee', 'Recipient ID', 'Contributor Name', 'Contributor ID', 
+    fields = ['Amount', 'Recipient Committee', 'Recipient ID',
+              'Contributor Name', 'Contributor ID',
               'Contributor City', 'Contributor State', 'Contributor Zip Code']
 
     s = rawdata['Ballot Measure(s)']
@@ -212,10 +217,11 @@ def _(mo):
 
 
 @app.cell
-def _(mo, pros):
+def _(pros):
     print('Top PRO contributors')
     _df = pros.groupby(['Contributor Name', 'Recipient ID'])['Amount'].sum().nlargest(15)/1e6
-    mo.plain(_df.head(10))
+    _df.head(10)
+    #mo.plain(_df.head(10))
     return
 
 
@@ -228,10 +234,11 @@ def _(mo):
 
 
 @app.cell
-def _(cons, mo):
+def _(cons):
     print('Top CON contributors')
     _df = cons.groupby(['Contributor Name', 'Recipient ID'])['Amount'].sum().nlargest(10)/1e6
-    mo.plain(_df.head(10))
+    _df.head(10)
+    #mo.plain(_df.head(10))
     return
 
 
@@ -332,14 +339,14 @@ def _():
 @app.cell
 def _():
     # All recipient committees PRO
-    #pros.groupby('Recipient Committee ID')['Amount'].nunique().sort_values(ascending=False)
+    #pros.groupby('Recipient ID')['Amount'].nunique().sort_values(ascending=False)
     return
 
 
 @app.cell
 def _():
     # All recipient committees CON
-    #cons.groupby('Recipient Committee ID')['Amount'].nunique().sort_values(ascending=False)
+    #cons.groupby('Recipient ID')['Amount'].nunique().sort_values(ascending=False)
     return
 
 
@@ -348,7 +355,7 @@ def _():
     ## Find cases of committees giving to other committees
     #_temp = pros[(pros['Recipient ID'] > 0) & (pros['Contributor ID'] > 0)]
     #print(f"PRO donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
-    #_temp.nlargest(10, 'Amount')
+    #_temp.nlargest(20, 'Amount')
     return
 
 
@@ -362,7 +369,7 @@ def _():
 @app.cell
 def _():
     #_id = 1486767
-    _id = 1353866
+    #_id = '1353866'
     #_id = 761010
     #_id = 1488414
     #pros[pros['Recipient ID'] == _id].sort_values('Amount', ascending=False)
@@ -396,19 +403,19 @@ def _():
     ## Find cases of committees giving to other committees
     #_temp = cons[(cons['Recipient ID'] > 0) & (cons['Contributor ID'] > 0)]
     #print(f"CON donations from another committee: {_temp['Amount'].count()} for ${_temp['Amount'].sum() / 1000000.0:.2f}M")
-    #_temp.nlargest(10, 'Amount')
+    #_temp.nlargest(20, 'Amount')
     return
 
 
 @app.cell
 def _():
-    #rawdata[ (rawdata['Recipient ID'] == 1484470) & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
+    #rawdata[ (rawdata['Recipient ID'] == '1484470') & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
     return
 
 
 @app.cell
 def _():
-    #rawdata[ (rawdata['Recipient ID'] == 1489007) & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
+    #rawdata[ (rawdata['Recipient ID'] == '1489007') & (rawdata['Contributor Name'] == 'Unitemized Contributions') ].nlargest(20, 'Amount')
     return
 
 
