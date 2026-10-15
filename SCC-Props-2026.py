@@ -94,8 +94,8 @@ def _(df_sheets, mo):
 @app.cell
 def _(df_sheets):
     _df = df_sheets['497']
-    _subset = _df[_df['Elect_Date'] == '2026-11-03']
-    #_subset = _df[ _df['Elect_Date'].isna() ]
+    #_subset = _df[_df['Elect_Date'] == '2026-11-03']
+    _subset = _df[ _df['Elect_Date'].isna() ]
     #subset.info()
     _subset
     return
@@ -104,12 +104,13 @@ def _(df_sheets):
 @app.cell
 def _(df_sheets, pd):
     _df = df_sheets['497']
-    _subset = _df[ (_df['Committee_Type'] == 'BMC') & (_df['Rpt_Date'] > pd.Timestamp('2026/6/30')) ]
+    #_subset = _df[ (_df['Committee_Type'] == 'BMC') & (_df['Rpt_Date'] > pd.Timestamp('2026/6/30')) ]
+    _subset = _df[ (_df['Rpt_Date'] > pd.Timestamp('2026/6/30')) ]
     #_subset
 
     # Prob don't need to dedup, but this gets the columns to line up
     late_contribs = _subset.groupby(['Filer_ID', 'Tran_ID'], as_index=False).first()
-    late_contribs.rename(columns={'Enty_NamL':'Tran_NamL',
+    late_contribs.rename(columns={'Enty_NamL': 'Tran_NamL',
                                   'Enty_NamF': 'Tran_NamF',
                                   'Enty_NamT': 'Tran_NamT',
                                   'Enty_NamS': 'Tran_NamS',
@@ -130,6 +131,14 @@ def _(df_sheets, pd):
 
 
 @app.cell
+def _(late_contribs):
+    #late_contribs['Filer_ID'].value_counts(dropna=False)
+    late_contribs['Elect_Date'].value_counts(dropna=False)
+    #late_contribs['Cmte_ID'].value_counts(dropna=False)
+    return
+
+
+@app.cell
 def _(df_sheets):
     # First, we need to dedup by Tran_ID
     # (the spreadsheet seems to be reverse-chron, so take the first of each dupl)
@@ -140,6 +149,14 @@ def _(df_sheets):
     #_df.info()
     quarterly_contribs.info()
     return (quarterly_contribs,)
+
+
+@app.cell
+def _(quarterly_contribs):
+    quarterly_contribs['Committee_Type'].value_counts(dropna=False)
+    #quarterly_contribs['Entity_Cd'].value_counts(dropna=False)
+    #quarterly_contribs['Rec_Type'].value_counts(dropna=False)
+    return
 
 
 @app.cell
@@ -168,7 +185,7 @@ def _(mo):
 
 @app.cell
 def _(contribs):
-    props = contribs[ contribs['Committee_Type'] == 'BMC' ]
+    props = contribs[ (contribs['Committee_Type'] == 'BMC') | (contribs['Committee_Type'] == 'MDI') ]
     #props.head()
     _df = props.groupby(['Filer_ID', 'Filer_NamL'])['Filer_NamL'].count()
     _df.nlargest(10)
@@ -254,7 +271,7 @@ def _(con_df, pd, pro_df):
     rows = ['Total ($M)', 'Num Donors', 'Avg Donation ($)', 'Median Donation ($)']
     funs = [pd.Series.sum, pd.Series.count, pd.Series.mean, pd.Series.median]
     totals = pd.DataFrame({ 'PRO': [x(_p) for x in funs], 
-                            'CON': [x(_c) for x in funs]}, index=rows)
+                               'CON': [x(_c) for x in funs]}, index=rows)
 
     totals.loc['Total ($M)'] /= 1000000.0
 

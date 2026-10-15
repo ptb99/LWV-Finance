@@ -123,7 +123,7 @@ def _(dropdown, election, headers, make_url, pd):
     #rawdata.head() 
     rawdata.info()
     #rawdata.to_csv('powersearch-test-Oct30.csv')
-    return (rawdata,)
+    return prop_num, rawdata
 
 
 @app.cell(hide_code=True)
@@ -143,18 +143,18 @@ def _(mo, rawdata):
 
 
 @app.cell
-def _(rawdata, re):
+def _(prop_num, rawdata, re):
     # separate support/oppose, group by contributor, sum amount
-    pro_regex = re.compile(r'^SUPPORT', re.IGNORECASE)
-    con_regex = re.compile(r'^OPPOSE', re.IGNORECASE)
+    pro_regex = re.compile(rf'SUPPORTED:\s?PROPOSITION {prop_num:03d}', re.IGNORECASE)
+    con_regex = re.compile(rf'OPPOSED:\s?PROPOSITION {prop_num:03d}', re.IGNORECASE)
 
     fields = ['Amount', 'Recipient Committee', 'Recipient ID',
               'Contributor Name', 'Contributor ID',
               'Contributor City', 'Contributor State', 'Contributor Zip Code']
 
     s = rawdata['Ballot Measure(s)']
-    pros = rawdata[s.map(lambda x: pro_regex.match(x) is not None)][fields]
-    cons = rawdata[s.map(lambda x: con_regex.match(x) is not None)][fields]
+    pros = rawdata[s.map(lambda x: pro_regex.search(x) is not None)][fields]
+    cons = rawdata[s.map(lambda x: con_regex.search(x) is not None)][fields]
 
     cons.info()
     return cons, pros
